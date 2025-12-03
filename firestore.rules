@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is full admin
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'archanakumariak117@gmail.com';
+    }
+
+    // Helper function to check if user is co-admin (look up in coAdmins collection)
+    function isCoAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/{database}/documents/coAdmins/$(request.auth.uid));
+    }
+
+    // Helper function to check if user is admin or co-admin
+    function isAdminOrCoAdmin() {
+      return isAdmin() || isCoAdmin();
+    }
+
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Batches - Read by all authenticated users, create/update by admin/co-admin, delete by admin only
+    match /batches/{batchId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdminOrCoAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Test Series - Read by authenticated users, create/update by admin/co-admin, delete by admin only
+    match /testSeries/{testId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdminOrCoAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Study Materials - Read by authenticated users, create/update by admin/co-admin, delete by admin only
+    match /studyMaterials/{materialId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdminOrCoAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Test Attempts - Users can only read/write their own attempts
+    match /attempts/{attemptId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // User Progress - Users can only read/write their own progress
+    match /progress/{progressId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // Paid Access - Read by user themselves or admin, write by admin only
+    match /paidAccess/{accessId} {
+      allow read: if isAuthenticated() &&
+                     (isOwner(resource.data.userId) || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Enrollments - Users can enroll themselves, read their own enrollments
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated();
+      allow update: if isAdmin();
+    }
+
+    // Co-Admins - Admin only read/write
+    match /coAdmins/{coAdminId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
