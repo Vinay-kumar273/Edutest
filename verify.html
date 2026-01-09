@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ad Verification Required</title>
+<style>
+body{
+  font-family: Arial;
+  background:#0f172a;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
+}
+.box{
+  background:#020617;
+  padding:25px;
+  border-radius:16px;
+  box-shadow:0 0 40px rgba(0,0,0,.4);
+  max-width:420px;
+  width:90%;
+  text-align:center;
+}
+button{
+  padding:10px 20px;
+  font-size:16px;
+  border:0;
+  border-radius:10px;
+  cursor:pointer;
+}
+.wait{color:#94a3b8;}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h2>Ad Verification</h2>
+<p>View the advertisement and then continue to our website.</p>
+
+<!-- paste your ad network script here -->
+<div id="ad-box" style="margin:15px 0;"></div>
+
+<p id="timer" class="wait">Please wait 10 seconds…</p>
+
+<button id="continueBtn" disabled>Verify & Continue</button>
+</div>
+
+<script>
+let sec = 10;
+const t = document.getElementById("timer");
+const btn = document.getElementById("continueBtn");
+
+const x = setInterval(()=>{
+  sec--;
+  t.innerText = "Please wait " + sec + " seconds…";
+  if(sec<=0){
+    clearInterval(x);
+    t.innerText = "You can continue now";
+    btn.disabled = false;
+  }
+},1000);
+
+// redirect after verification
+btn.onclick = ()=>{
+  window.location.href = "/";
+};
+</script>
+
+</body>
+</html>
