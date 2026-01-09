@@ -13,16 +13,25 @@ import { PublicResult } from './components/Shared/PublicResult';
 import { Batch, TestSeries } from './types';
 import { Loader2 } from 'lucide-react';
 
-type View = 'home' | 'batch' | 'test' | 'result' | 'dashboard' | 'admin' | 'public-result';
+type View =
+  | 'verify'
+  | 'home'
+  | 'batch'
+  | 'test'
+  | 'result'
+  | 'dashboard'
+  | 'admin'
+  | 'public-result';
 
 function AppContent() {
   const { user, loading } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [currentView, setCurrentView] = useState<View>('home');
+  const [currentView, setCurrentView] = useState<View>('verify');   // 👈 default verify first
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [selectedTest, setSelectedTest] = useState<TestSeries | null>(null);
   const [resultId, setResultId] = useState<string>('');
 
+  // ========= LOADING ==========
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -31,6 +40,7 @@ function AppContent() {
     );
   }
 
+  // ========= AUTH ==========
   if (!user) {
     return authMode === 'login' ? (
       <Login onToggle={() => setAuthMode('signup')} />
@@ -39,6 +49,36 @@ function AppContent() {
     );
   }
 
+  // ========= VERIFICATION PAGE ==========
+  if (currentView === 'verify') {
+    return (
+      <div className="flex flex-col gap-6 items-center justify-center min-h-screen bg-gray-50 px-4">
+        <h1 className="text-2xl font-bold">Verification Required</h1>
+        <p className="max-w-md text-center text-gray-600">
+          Please complete the verification step to access tests and dashboard.
+          This helps us keep the platform free for everyone.
+        </p>
+
+        <a
+          href="YOUR_SHORTENER_LINK_HERE"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow"
+        >
+          Verify & Continue
+        </a>
+
+        <button
+          onClick={() => setCurrentView('home')}
+          className="text-sm underline text-gray-600"
+        >
+          I have completed verification
+        </button>
+      </div>
+    );
+  }
+
+  // ========= HANDLERS ==========
   const handleBatchClick = (batch: Batch) => {
     setSelectedBatch(batch);
     setCurrentView('batch');
@@ -77,6 +117,7 @@ function AppContent() {
     setCurrentView('result');
   };
 
+  // ========= CONTENT RENDER ==========
   const renderContent = () => {
     if (currentView === 'test' && selectedTest) {
       const batchId = selectedBatch?.id || selectedTest.batchId;
@@ -114,7 +155,9 @@ function AppContent() {
       <>
         <Navbar currentView={currentView} onNavigate={handleNavigate} />
         <div className="max-w-7xl mx-auto px-4 py-8">
-          {currentView === 'home' && <BatchList onBatchClick={handleBatchClick} />}
+          {currentView === 'home' && (
+            <BatchList onBatchClick={handleBatchClick} />
+          )}
           {currentView === 'batch' && selectedBatch && (
             <BatchDetail
               batch={selectedBatch}
